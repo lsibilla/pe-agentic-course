@@ -54,9 +54,10 @@ python module2/triage_agent.py --mock
 **Expected output (mock mode):**
 ```json
 {
-  "diagnosis": "The deployment failed due to a missing environment variable PAYMENT_API_KEY in the production environment.",
+  "summary": "The Node.js test suite failed with 3 assertion errors in auth.test.js. Memory climbed to 87% during the run.",
+  "likely_cause": "Test fixtures are not cleaned up between test cases, retaining heap references and causing assertion failures on retry.",
+  "next_step": "Add explicit cleanup in the afterEach hook and reduce the fixture dataset from 10,000 to 100 records.",
   "confidence": "HIGH",
-  "recommended_action": "Add PAYMENT_API_KEY to GitHub Actions secrets and reference it in the workflow env block.",
   "escalate": false
 }
 ```
@@ -66,14 +67,7 @@ python module2/triage_agent.py --mock
 ANTHROPIC_API_KEY=sk-... python module2/triage_agent.py
 ```
 
-The script implements the five-step agentic loop:
-1. `step1_write_prompt()` — build the system prompt and user message
-2. `step2_call_api()` — call `ask()` and return the dict
-3. `step3_parse_json()` — validate required keys are present
-4. `step4_execute_action()` — print `recommended_action`; if `escalate=true`, print escalation notice
-5. `step5_verify_result()` — return True if output meets success criteria
-
-**Key Takeaway:** The five steps make testing trivial — you can unit-test `step3_parse_json()` independently of the API call, and mock `step2_call_api()` without touching the prompt logic.
+**Key Takeaway:** Compare the output schema in the exercise (`triage_agent.py`) against the reference solution (`solutions/solution.py`). The solution reorganises the same logic into five explicit, independently testable steps — `step1_write_prompt()`, `step2_call_api()`, `step3_parse_json()`, `step4_execute_action()`, `step5_verify_result()`. Both produce a working agent; the five-step version makes unit testing trivial because each step can be tested in isolation without touching the others.
 
 ---
 
@@ -118,7 +112,7 @@ This is the first module where you can see your agent running in a real CI envir
 ## Success Criteria
 
 - `triage_agent.py --mock` runs cleanly and prints valid JSON
-- Live run returns all four keys: `diagnosis`, `confidence`, `recommended_action`, `escalate`
+- Live run returns all five keys: `summary`, `likely_cause`, `next_step`, `confidence`, `escalate`
 - `confidence` is `HIGH` for the `sample_log.txt` OOM scenario (the log is unambiguous)
 - `escalate` is `false` — agent has a concrete fix, no human needed
 - `output/output_module2.json` is written

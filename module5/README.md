@@ -95,16 +95,16 @@ Full result saved to `output/output_module5.json`.
 
 ## Exercise
 
-**Part A — Quality gate:** Open `triage_agent.py`. Implement `run_agent()` — write the `ask()` call that sends `SYSTEM_PROMPT` and the pipeline results to Claude and returns the result dict. The `SYSTEM_PROMPT` is already written for you; study it before calling `ask()`.
+**Part A — Read and run the quality gate:** `triage_agent.py` is fully implemented — both the `SYSTEM_PROMPT` and `run_agent()` are complete. Study the implementation before running it: read `SYSTEM_PROMPT` to understand the gate criteria, then trace how `run_agent()` loads `sample_data.json`, calls `ask()`, and prints the structured decision.
 
 ```bash
-python module5/triage_agent.py --mock                          # shows expected output
-ANTHROPIC_API_KEY=sk-... python module5/triage_agent.py        # your live implementation
+python module5/triage_agent.py --mock                     # shows expected output shape
+ANTHROPIC_API_KEY=sk-... python module5/triage_agent.py   # live run against Claude
 ```
 
-**Part B — Threshold experiment:** Lower the `threshold` for `test_coverage` in `quality-gates.json` from 95 to 70. Re-run `triage_agent.py` and observe how the decision changes — no code edit needed, just the config file.
+**Part B — Threshold experiment:** Edit `quality-gates.json` — lower the `threshold` for `test_coverage` from 95 to 70. Re-run `triage_agent.py` and observe how the gate decision changes. No code edit required, only the config file. This demonstrates the architecture: the agent reads thresholds as data, not as hardcoded logic.
 
-If you get stuck, see `solutions/solution.py` for the reference implementation.
+See `solutions/solution.py` for a version with an extended six-dimension gate including a Change Risk dimension not present in the base implementation.
 
 ---
 

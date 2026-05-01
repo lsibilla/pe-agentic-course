@@ -172,10 +172,10 @@ The workflow runs `agent.py` — the simplified single-agent entry point. In CI,
 
 - `orchestrator.py --mock` runs cleanly and shows all three scenarios
 - Both specialist agents run and return valid JSON
-- Conflict detection correctly identifies overlapping targets
-- Synthesis agent produces `unified_actions` and `final_decision`
+- Conflict detection correctly classifies the scenario: `HARD_CONFLICT` → `SAFETY_FIRST_ESCALATE`, `SOFT_CONFLICT` → `SOFT_ESCALATE`, no conflict → `SYNTHESISE`
+- Output JSON contains `gate_agent`, `rollback_agent`, and `conflict` keys; `conflict` contains `detected`, `type`, `resolution`, and `summary`
 - `interpret.py` produces a readable task list and escalation memo
 - Full output saved to `output/orchestrator_module7.json`
-- If `escalate=true`, an escalation notice is printed
+- If resolution contains `ESCALATE`, an escalation notice is printed
 - GitHub Actions workflow completes and `module7-output` artifact is attached to the run
 - If stuck, see `solutions/solution.py`

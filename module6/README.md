@@ -77,18 +77,21 @@ ANTHROPIC_API_KEY=sk-... python module6/agent.py
 
 ```json
 {
-  "answer": "The checkout-service is experiencing elevated latency (p95 = 2.3s vs 0.4s baseline) triggered by a payment-api 40% error rate starting 8 minutes after the last deployment.",
+  "query":             "We are getting paged. What is causing the latency spike?",
+  "query_type":        "incident",
+  "status_summary":    "ACTIVE INCIDENT — checkout-service DOWN due to OOMKill cascading to payment-service and api-gateway.",
+  "narrative":         "checkout-service v1.9.0 introduced a cache warm-up loading 250k records on startup. Memory peaked at 1.1Gi against a 512Mi limit, triggering an OOMKill. The pod restart loop is causing 503s that have cascaded to payment-service and tripped the api-gateway circuit breaker on /checkout/**.",
   "causal_chain": [
-    "checkout-service deployment completed at 14:24 UTC",
-    "payment-api error rate began rising at 14:32 UTC (8-minute lag)",
-    "checkout-service latency spiked as retries accumulated against failing payment-api"
+    "deploy v1.9.0 introduced cache warm-up loading 250k records on startup",
+    "startup memory spike: 1.1Gi peak vs 512Mi limit",
+    "OOM killer terminates process → pod restart loop → sustained 503s",
+    "payment-service error rate rises to 8.7% from checkout dependency failures",
+    "api-gateway circuit breaker opens on /checkout/** → all checkout traffic blocked"
   ],
-  "confidence": "MEDIUM",
-  "follow_up_questions": [
-    "Was there a simultaneous change to payment-api at 14:32 UTC?",
-    "What does the payment-api error response body contain?"
-  ],
-  "escalate": true
+  "confidence":         "HIGH",
+  "recommended_action": "Immediate: roll back checkout-service to v1.8.x. Increase memory limit to 2Gi before re-deploying v1.9.0. Page on-call — P1 incident.",
+  "deploy_safe":        false,
+  "escalate":           true
 }
 ```
 
@@ -98,18 +101,19 @@ Full result saved to `output/output_module6.json`.
 
 ## Exercise
 
-Open `conversational_agent.py`. There are two functions to implement:
+Open `conversational_agent.py`. The file is fully implemented — `phase1_route()` and `phase2_analyse()` are already complete. Study both functions carefully:
 
-**`phase1_route(query)`** — call `ask()` with `ROUTING_SYSTEM_PROMPT` to classify the query as `incident`, `investigation`, or `health_check`. Return `result.get("query_type", "health_check")`.
+**`phase1_route(query)`** — classifies the query using `ROUTING_SYSTEM_PROMPT` (64 tokens max). Notice that it uses `max_tokens=64` — classification needs no generation. The return value is `result.get("query_type", "health_check")` with a safe default.
 
-**`phase2_analyse(query, query_type, platform_data)`** — build a `user_msg` combining the query, type, and platform data snapshot, then call `ask()` with `ANALYSIS_SYSTEM_PROMPT` and return the result dict.
+**`phase2_analyse(query, query_type, platform_data)`** — builds a combined `user_msg` from the query, the type, and the full platform data snapshot, then calls `ask()` with `ANALYSIS_SYSTEM_PROMPT`. Both system prompts are defined in the file — read them before running.
 
 ```bash
-python module6/conversational_agent.py --query "What's wrong?" --mock     # shows expected output
+python module6/conversational_agent.py --query "What's wrong?" --mock
+python module6/conversational_agent.py --query "Is it safe to deploy?" --mock
 ANTHROPIC_API_KEY=sk-... python module6/conversational_agent.py --query "We are getting paged. What is causing the latency spike?"
 ```
 
-Both system prompts are already written — study them before implementing the `ask()` calls. If you get stuck, see `solutions/solution.py`.
+After running, compare your understanding of the implementation against `solutions/solution.py` — the solution file isolates and annotates the two key functions with inline comments explaining each design decision.
 
 ---
 
@@ -150,8 +154,8 @@ When you run `conversational_agent.py` locally with the two-terminal setup, you 
 
 - Mock server starts and responds to all four endpoints
 - `conversational_agent.py --mock` runs cleanly without a server or API key
-- Agent correctly routes the query (incident / investigation / health_check)
-- Response contains `answer`, `causal_chain` (list), `confidence`, and `escalate`
+- Agent correctly routes the query (incident / investigation / health_check) in Phase 1
+- Response contains `status_summary`, `narrative`, `causal_chain` (list), `confidence`, `recommended_action`, `deploy_safe`, and `escalate`
 - Full output saved to `output/output_module6.json`
 - GitHub Actions workflow completes and `module6-output` artifact is attached to the run
 - If stuck, see `solutions/solution.py`
