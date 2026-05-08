@@ -18,7 +18,7 @@ Open `module8/platform_agent.py`. Step 1 (INGEST) is fully implemented as a work
 |------|----------------------|------|------------------|
 | 1 | `run_step_ingest()` | Sequential | Classifies the failure event — **already done, use as your pattern** |
 | 2 | `run_step_diagnose()` | **Parallel** with Step 3 | Root cause analysis — confidence HIGH/MEDIUM/LOW, fix_possible true/false |
-| 3 | `run_step_gate()` | **Parallel** with Step 2 | Quality gate evaluation from INGEST (not DIAGNOSE) — APPROVE / HOLD |
+| 3 | `run_step_gate()` | **Parallel** with Step 2 | Quality gate evaluation from INGEST (not DIAGNOSE) — APPROVE / REJECT |
 | — | `detect_conflict()` | After Steps 2+3 | Safety First conflict check — **provided, do not edit** |
 | 4 | `run_step_fix_or_escalate()` | Sequential | AUTO_FIX or ESCALATE — receives diagnose + gate + conflict verdict |
 | 5 | `generate_report()` | Sequential | Post-mortem summary and prevention recommendations |
@@ -129,7 +129,7 @@ Record your screen while running the live pipeline. The video proves the agent r
    ```bash
    ANTHROPIC_API_KEY=sk-... python module8/platform_agent.py --simulate
    ```
-4. **The output file** — open `output/output_module8_platform_agent.json` and scroll through it to show Claude's verbatim reasoning for each step.
+4. **The output file** — open `output/platform_agent_module8.json` and scroll through it to show Claude's verbatim reasoning for each step.
 5. **GitHub Actions** — open the Actions tab in your browser and show the completed workflow run with the Step Summary visible.
 
 ---
@@ -153,7 +153,7 @@ PLATFORM AGENT — pipeline_id: sim-20260403-142200
 
 [Step 3/5] GATE EVALUATION
 ── Step: GATE ─────────────────────────────────────────────
-{ "decision": "HOLD", "risk_score": "HIGH", "escalate": true, ... }
+{ "decision": "REJECT", "risk_score": "HIGH", "escalate": true, ... }
 
 [Step 4/5] FIX OR ESCALATE
 ── Step: FIX_OR_ESCALATE ─────────────────────────────────
@@ -176,7 +176,7 @@ PLATFORM AGENT — FINAL REPORT
 
 | File | Contents |
 |------|----------|
-| `output/output_module8_platform_agent.json` | Full structured report — all 5 steps + final_output |
+| `output/platform_agent_module8.json` | Full structured report — all 5 steps + final_output |
 | `module8/fixes/fix_<pipeline_id>.py` | Auto-fix script (only written on AUTO_FIX path) |
 
 ---
@@ -185,7 +185,7 @@ PLATFORM AGENT — FINAL REPORT
 
 - The capstone is a multi-agent pipeline, not a single sequential agent. DIAGNOSE and GATE run in parallel via `ThreadPoolExecutor` — the same pattern Module 7 introduced — because they are genuinely independent specialists.
 - **GATE reads from INGEST, not DIAGNOSE.** Gate evaluation (severity, stage, deployment risk) does not depend on root cause analysis. Wiring it to DIAGNOSE would be a false dependency that serialises two calls that don't need to be.
-- `detect_conflict()` applies the Module 7 Safety First rule: if DIAGNOSE says a fix is possible (HIGH confidence) but GATE says HOLD, GATE wins — auto-fix is blocked and the pipeline escalates.
+- `detect_conflict()` applies the Module 7 Safety First rule: if DIAGNOSE says a fix is possible (HIGH confidence) but GATE says REJECT, GATE wins — auto-fix is blocked and the pipeline escalates.
 - The four TODO functions are all three-line patterns — the architecture lives in `run_pipeline()`, which is provided. Students implement the specialists; the orchestrator wires them together.
 - The recording deliverable exists for the same reason: a live pipeline run with visible conflict detection and escalation is something you can show in an engineering interview.
 
@@ -197,7 +197,7 @@ These extensions go beyond the core exercise and are genuinely how production in
 
 **Level 1 — Scenario Coverage**
 
-Edit `--simulate` to inject a HIGH-confidence scenario (change `confidence` in the mock event so the agent returns `fix_possible: True` with `confidence: HIGH`). Then also set `GATE` to return `HOLD`. Verify that `detect_conflict()` correctly triggers `SAFETY_FIRST_ESCALATE` and that no auto-fix script is written. This is the hard-conflict scenario — the most important safety test.
+Edit `--simulate` to inject a HIGH-confidence scenario (change `confidence` in the mock event so the agent returns `fix_possible: True` with `confidence: HIGH`). Then also set `GATE` to return `REJECT`. Verify that `detect_conflict()` correctly triggers `SAFETY_FIRST_ESCALATE` and that no auto-fix script is written. This is the hard-conflict scenario — the most important safety test.
 
 **Level 2 — Timeout Handling**
 
@@ -220,15 +220,15 @@ Extend `generate_report()` to include a `conflict_summary` key in its context an
 | Property | Value |
 |----------|-------|
 | Workflow name | `Module 8 — Capstone Agent` |
-| Trigger | Manual via Actions tab (with optional `simulate` input), **or** automatically when the "Module 4 — Broken Pipeline" workflow fails |
+| Trigger | Manual via Actions tab (with optional `simulate` input), **or** automatically when the "Module 4 — Broken Pipeline (Demo)" workflow fails |
 | Script run | `python module8/platform_agent.py --simulate` (default) or `python module8/platform_agent.py` (when `simulate=false`) |
-| Output artifact | `module8-capstone-report` → `output/output_module8_platform_agent.json` |
+| Output artifact | `module8-capstone-report` → `output/platform_agent_module8.json` |
 
 This workflow has two trigger modes:
 
 **Manual trigger:** Actions tab → "Module 8 — Capstone Agent" → Run workflow. You can optionally set `simulate` to `false` to run against `sample_data.json` instead of the synthetic event.
 
-**Automatic trigger:** When the `module4-broken-pipeline` workflow in your repo fails, this workflow fires automatically — but only if the conclusion is `failure`. This connects the two workflows: Module 4 intentionally breaks, Module 8 responds. This is a realistic pattern for production incident pipelines where a CI failure triggers an autonomous diagnosis and remediation agent.
+**Automatic trigger:** When the `module4-broken-pipeline` ("Module 4 — Broken Pipeline (Demo)") workflow in your repo fails, this workflow fires automatically — but only if the conclusion is `failure`. This connects the two workflows: Module 4 intentionally breaks, Module 8 responds. This is a realistic pattern for production incident pipelines where a CI failure triggers an autonomous diagnosis and remediation agent.
 
 The workflow only runs when `github.event_name == 'workflow_dispatch'` OR `github.event.workflow_run.conclusion == 'failure'`. If Module 4's workflow passes (which it won't — it's intentionally broken), Module 8 does not trigger.
 
@@ -239,7 +239,7 @@ The workflow only runs when `github.event_name == 'workflow_dispatch'` OR `githu
 ## Success Criteria
 
 - All five steps complete and print JSON to the terminal without errors.
-- `output/output_module8_platform_agent.json` is written and contains all five steps plus `final_output`.
+- `output/platform_agent_module8.json` is written and contains all five steps plus `final_output`.
 - ESCALATE path: `final_output.github_issue_title` and `github_issue_body` are non-empty strings.
 - AUTO_FIX path (optional — requires editing `sample_data.json` to a HIGH confidence scenario): a fix script appears in `module8/fixes/`.
 - GitHub Actions workflow completes and `module8-capstone-report` artifact is attached to the run.

@@ -18,8 +18,9 @@ Usage
     python module6/conversational_agent.py --query "Is everything healthy?" --mock
 
     # 3. Run against all three scenarios:
-    python module6/conversational_agent.py --query "Why is latency elevated?" --mock
-    python module6/conversational_agent.py --query "We are getting paged. What's wrong?" --mock
+    python module6/conversational_agent.py --query "Why is latency elevated?" --mock --scenario high-load
+    python module6/conversational_agent.py --query "We are getting paged. What's wrong?" --mock --scenario incident
+    python module6/conversational_agent.py --query "Is it safe to deploy?" --mock --scenario normal
 
     # 4. Run live against Claude:
     ANTHROPIC_API_KEY=sk-... python module6/conversational_agent.py --query "Is it safe to deploy?"
@@ -274,6 +275,12 @@ def main():
         action="store_true",
         help="Run in mock mode — no Claude API call, no live server required",
     )
+    parser.add_argument(
+        "--scenario",
+        choices=["normal", "high-load", "incident"],
+        default="incident",
+        help="Mock scenario to use in --mock mode (default: incident)",
+    )
     args = parser.parse_args()
 
     if args.mock and not MOCK_MODE:
@@ -291,7 +298,7 @@ def main():
         if _mock_dir not in sys.path:
             sys.path.insert(0, _mock_dir)
         from observability_mock import SCENARIOS  # noqa: E402
-        scenario_key = "incident"  # change to "normal" or "high-load" to see different output
+        scenario_key = args.scenario
         platform_data = SCENARIOS[scenario_key]
         print(f"[MOCK MODE] Using '{scenario_key}' scenario data (no server needed)")
         print(f"[MOCK MODE] In real mode, data is fetched live from {args.server}\n")

@@ -8,7 +8,7 @@ AI-powered release readiness evaluation across multiple threshold dimensions.
 The gate evaluates six configurable criteria and returns a structured decision:
   APPROVE               — all gates pass, deploy immediately
   APPROVE_WITH_CONDITIONS — pass with caveats (e.g. coverage below threshold but not regressed)
-  HOLD                  — one or more blocking issues, do not deploy
+  REJECT                — one or more blocking issues, do not deploy
 
 The key architectural principle: the thresholds live in quality-gates.json,
 not in the system prompt. Changing a threshold requires editing a config file,
@@ -82,7 +82,7 @@ SYSTEM_PROMPT = (
     "  5. Cost          — cost_per_request_delta <= 10%\n"
     "  6. Change Risk   — HIGH if Friday deploy AND lines_changed > 500\n\n"
     "Return ONLY valid JSON with keys:\n"
-    "  decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD),\n"
+    "  decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT),\n"
     "  confidence (HIGH|MEDIUM|LOW),\n"
     "  rationale (string — one paragraph),\n"
     "  blocking_issues (list of strings — empty if APPROVE),\n"
@@ -91,7 +91,7 @@ SYSTEM_PROMPT = (
     "  recommended_deploy_window (string),\n"
     "  change_risk_score (LOW|MEDIUM|HIGH),\n"
     "  change_risk_reason (string),\n"
-    "  escalate (boolean — true only if HOLD with a P1 security finding)."
+    "  escalate (boolean — true only if REJECT with a P1 security finding)."
 )
 
 AGENT_CONFIG = {
@@ -145,7 +145,7 @@ def run_agent() -> dict:
         for c in result.get("conditions", []):
             print(f"   • {c}")
     else:
-        print(f"\n🔴 Gate HOLD — do not deploy")
+        print(f"\n🔴 Gate REJECTED — do not deploy")
         for b in result.get("blocking_issues", []):
             print(f"   • {b}")
 

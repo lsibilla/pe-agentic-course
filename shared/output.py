@@ -31,6 +31,17 @@ def to_step_summary(result: dict, title: str = "Agent Result") -> str:
     Write to $GITHUB_STEP_SUMMARY if running in CI.
     Returns the markdown string in all cases.
     """
+    _MAX_CELL = 120   # characters — keeps table rows readable in the GitHub UI
+
+    def _format_val(v) -> str:
+        if isinstance(v, bool):
+            return str(v)
+        if isinstance(v, (dict, list)):
+            s = json.dumps(v)
+            return s[:_MAX_CELL] + "…" if len(s) > _MAX_CELL else s
+        s = str(v)
+        return s[:_MAX_CELL] + "…" if len(s) > _MAX_CELL else s
+
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [
         f"## {title}",
@@ -40,7 +51,11 @@ def to_step_summary(result: dict, title: str = "Agent Result") -> str:
         "|-------|-------|",
     ]
     for k, v in result.items():
-        val = json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+        # Skip large raw-data blobs from the summary table
+        if k == "raw_platform_data":
+            lines.append(f"| `{k}` | _(omitted — see output JSON)_ |")
+            continue
+        val = _format_val(v)
         lines.append(f"| `{k}` | {val} |")
 
     md = "\n".join(lines)

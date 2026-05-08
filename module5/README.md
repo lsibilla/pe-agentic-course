@@ -4,7 +4,7 @@
 
 A two-agent CI/CD quality gate system:
 
-1. **`triage_agent.py`** (blocking gate) — runs *before* deploy, evaluates the release candidate against six configurable thresholds in `quality-gates.json`, and returns `APPROVE`, `APPROVE_WITH_CONDITIONS`, or `HOLD`.
+1. **`triage_agent.py`** (blocking gate) — runs *before* deploy, evaluates the release candidate against six configurable thresholds in `quality-gates.json`, and returns `APPROVE`, `APPROVE_WITH_CONDITIONS`, or `REJECT`.
 2. **`monitor.py`** (post-deploy watchdog) — runs *after* deploy on a timed check, evaluates live production signals, and decides whether to recommend an immediate rollback.
 
 This is deliberate separation of concerns: the gate prevents bad deploys; the monitor catches what slips through.
@@ -140,7 +140,7 @@ Note that `monitor.py` (the post-deploy watchdog) is not included in this workfl
 ## Success Criteria
 
 - `triage_agent.py --mock` runs cleanly and shows expected output shape
-- Live run returns `decision` of APPROVE, APPROVE_WITH_CONDITIONS, or HOLD
+- Live run returns `decision` of APPROVE, APPROVE_WITH_CONDITIONS, or REJECT
 - `monitor.py` returns `rollback_recommended` (boolean) with a `severity`
 - Editing `quality-gates.json` changes the gate decision without code changes
 - Full output saved to `output/output_module5.json`

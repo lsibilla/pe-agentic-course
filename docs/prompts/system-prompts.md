@@ -109,7 +109,7 @@ Rules:
 ```
 You are a release readiness evaluation agent. Assess the pipeline results and return
 ONLY valid JSON with keys:
-decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD),
+decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT),
 confidence (HIGH|MEDIUM|LOW),
 rationale (string),
 blocking_issues (list of strings),
@@ -123,7 +123,7 @@ escalate (boolean).
 
 | Key | Type | Notes |
 |-----|------|-------|
-| `decision` | `APPROVE\|APPROVE_WITH_CONDITIONS\|HOLD` | Gate decision |
+| `decision` | `APPROVE\|APPROVE_WITH_CONDITIONS\|REJECT` | Gate decision |
 | `confidence` | `HIGH\|MEDIUM\|LOW` | Confidence in assessment |
 | `rationale` | string | One-paragraph explanation |
 | `blocking_issues` | `string[]` | Empty list if `decision=APPROVE` |
@@ -208,7 +208,7 @@ Rules:
 ```
 You are a quality gate evaluation agent. Assess the deployment pipeline data and
 return ONLY valid JSON with keys:
-- decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD): overall gate decision
+- decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT): overall gate decision
 - confidence (HIGH|MEDIUM|LOW): confidence in the assessment
 - rationale (string): one-paragraph explanation
 - blocking_issues (list of strings): empty if APPROVE
@@ -266,7 +266,7 @@ You are a root cause analysis agent. Diagnose the CI/CD failure and return ONLY 
 ### GATE
 ```
 You are a quality gate evaluation agent. Given pipeline results, return ONLY valid JSON:
-- decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD)
+- decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT)
 - rationale (string): one paragraph explanation
 - blocking_issues (list of strings): empty list if APPROVE
 - risk_score (LOW|MEDIUM|HIGH)

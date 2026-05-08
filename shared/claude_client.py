@@ -6,6 +6,7 @@ Students do not modify this file — they call ask() from their agent scripts.
 """
 
 import os
+import re
 import json
 import anthropic
 
@@ -102,12 +103,14 @@ def ask(
         )
         raw = message.content[0].text.strip()
 
-        # Strip markdown code fences if present
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-            raw = raw.strip()
+        # Strip markdown code fences if present.
+        # Handles: ```json ... ```, ``` ... ```, and trailing prose after the fence.
+        fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+        if fence_match:
+            raw = fence_match.group(1).strip()
+        elif raw.startswith("```"):
+            # Malformed — single fence with no closing marker; strip the opener
+            raw = re.sub(r"^```(?:json)?", "", raw).strip()
 
         # Repair literal newlines inside JSON string values
         raw = _sanitize_json(raw)

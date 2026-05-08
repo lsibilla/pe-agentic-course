@@ -42,7 +42,7 @@ MOCK_RESPONSE = {
 
 # ── Prompt & config ────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = (
-    "You are a release readiness evaluation agent. Assess the pipeline results and return ONLY valid JSON with keys: decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD), confidence (HIGH|MEDIUM|LOW), rationale (string), blocking_issues (list of strings), conditions (list of strings, empty if decision=APPROVE), risk_score (LOW|MEDIUM|HIGH), recommended_deploy_window (string), escalate (boolean)."
+    "You are a release readiness evaluation agent. Assess the pipeline results and return ONLY valid JSON with keys: decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT), confidence (HIGH|MEDIUM|LOW), rationale (string), blocking_issues (list of strings), conditions (list of strings, empty if decision=APPROVE), risk_score (LOW|MEDIUM|HIGH), recommended_deploy_window (string), escalate (boolean)."
 )
 
 AGENT_CONFIG = {

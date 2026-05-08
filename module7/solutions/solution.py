@@ -159,7 +159,7 @@ MOCK_SCENARIOS = {
 GATE_SYSTEM_PROMPT = """\
 You are a quality gate evaluation agent. Assess the deployment pipeline data and
 return ONLY valid JSON with keys:
-- decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD): overall gate decision
+- decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT): overall gate decision
 - confidence (HIGH|MEDIUM|LOW): confidence in the assessment
 - rationale (string): one-paragraph explanation
 - blocking_issues (list of strings): empty if APPROVE

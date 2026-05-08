@@ -27,7 +27,7 @@ Key design decisions
   signals from INGEST and does not need the root cause from DIAGNOSE.
 • Running them in parallel cuts wall-clock time for the two most expensive steps.
 • detect_conflict() applies the Module 7 Safety First rule: if DIAGNOSE says a fix
-  is possible (HIGH confidence) but GATE says HOLD, GATE wins — always.
+  is possible (HIGH confidence) but GATE says REJECT, GATE wins — always.
 
 Your task (Steps 2–5)
 ---------------------
@@ -93,7 +93,7 @@ MOCK_REPORT = {
         },
         "gate": {
             "status":          "completed",
-            "decision":        "HOLD",
+            "decision":        "REJECT",
             "rationale":       "Integration tests cannot run while the DB migration lock is held. Gate evaluation deferred.",
             "blocking_issues": ["DB migration lock held by deploy-2024-0130-011"],
             "risk_score":      "HIGH",
@@ -103,7 +103,7 @@ MOCK_REPORT = {
             "detected":   False,
             "type":       "NO_CONFLICT",
             "resolution": "PROCEED",
-            "summary":    "DIAGNOSE: MEDIUM confidence. GATE: HOLD. Agents agree — both recommend escalation, no auto-fix attempted.",
+            "summary":    "DIAGNOSE: MEDIUM confidence. GATE: REJECT. Agents agree — both recommend escalation, no auto-fix attempted.",
         },
         "fix_or_escalate": {
             "status":               "completed",
@@ -133,7 +133,7 @@ MOCK_REPORT = {
             "detected":   False,
             "type":       "NO_CONFLICT",
             "resolution": "PROCEED",
-            "summary":    "DIAGNOSE: MEDIUM confidence. GATE: HOLD. Agents agree.",
+            "summary":    "DIAGNOSE: MEDIUM confidence. GATE: REJECT. Agents agree.",
         },
         "github_issue_title":  "[Agent] DB Migration Lock Blocking Integration Tests — Manual Intervention Required",
         "github_issue_body":   "## Agent Diagnosis\n\n**Confidence:** MEDIUM\n**Action:** ESCALATE\n\n### Root Cause\nStale migration lock from deploy-2024-0130-011 blocking 33 integration tests.\n\n---\n_Written by Ajay · ajay@platformetrics.com · ajay@platformengineering.org_",
@@ -167,7 +167,7 @@ You are a quality gate evaluation agent. You run in parallel with the DIAGNOSE a
 you do NOT have access to the diagnosis. Given only the CI/CD failure event and its
 initial classification from the INGEST step, evaluate the quality gates independently.
 Return ONLY valid JSON:
-- decision (APPROVE|APPROVE_WITH_CONDITIONS|HOLD)
+- decision (APPROVE|APPROVE_WITH_CONDITIONS|REJECT)
 - rationale (string): one paragraph explanation of the gate decision
 - blocking_issues (list of strings): what is preventing APPROVE — empty list if APPROVE
 - conditions (list of strings): conditions required for APPROVE_WITH_CONDITIONS — empty otherwise
@@ -304,7 +304,7 @@ def detect_conflict(diagnose: dict, gate: dict) -> dict:
     """Detect conflicts between the DIAGNOSE and GATE specialist agents.
 
     Applies the Module 7 Safety First rule to the capstone pipeline:
-    - HARD_CONFLICT: DIAGNOSE says HIGH confidence + fix possible, but GATE says HOLD.
+    - HARD_CONFLICT: DIAGNOSE says HIGH confidence + fix possible, but GATE says REJECT.
       → GATE wins. Auto-fix is blocked. Escalate to human.
     - SOFT_CONFLICT: GATE approves but DIAGNOSE confidence is MEDIUM or LOW.
       → Agents disagree on certainty. Inform on-call, proceed with caution.
@@ -312,18 +312,18 @@ def detect_conflict(diagnose: dict, gate: dict) -> dict:
 
     This function is provided — do not modify it.
     """
-    gate_decision = gate.get("decision", "HOLD")
+    gate_decision = gate.get("decision", "REJECT")
     confidence    = diagnose.get("confidence", "LOW")
     fix_possible  = diagnose.get("fix_possible", False)
 
-    if gate_decision == "HOLD" and fix_possible and confidence == "HIGH":
+    if gate_decision == "REJECT" and fix_possible and confidence == "HIGH":
         return {
             "detected":   True,
             "type":       "HARD_CONFLICT",
             "resolution": "SAFETY_FIRST_ESCALATE",
             "summary": (
                 f"DIAGNOSE: HIGH confidence, fix_possible=true. "
-                f"GATE: HOLD — {gate.get('blocking_issues', [])}. "
+                f"GATE: REJECT — {gate.get('blocking_issues', [])}. "
                 "Hard conflict — Safety First: block auto-fix, escalate to human."
             ),
         }
@@ -421,7 +421,7 @@ def run_pipeline(event: dict) -> dict:
             print("\n💡  TODO: One of the parallel step functions is not yet implemented.")
             print("    Implement run_step_diagnose() and run_step_gate() in platform_agent.py,")
             print("    following the exact same 3-line pattern as run_step_ingest().")
-            print("    To test the pipeline without implementing, run: python module8/platform_agent.py --simulate --mock")
+            print("    To test the pipeline without implementing, run: python module8/platform_agent.py --mock --simulate")
             raise
 
     steps["diagnose"] = {**diagnose_result, "status": "completed"}

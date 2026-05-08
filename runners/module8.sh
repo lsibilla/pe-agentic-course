@@ -126,7 +126,7 @@ if $MOCK_MODE; then
   warn "Live mode would:"
   warn "  1. Generate a synthetic CI failure event"
   warn "  2. Run all 5 steps against Claude"
-  warn "  3. Save the full output to output/output_module8_platform_agent.json"
+  warn "  3. Save the full output to output/platform_agent_module8.json"
 else
   section "LIVE RUN: FULL 5-STEP PIPELINE"
   echo "Running the real agent against Claude..."
@@ -141,11 +141,11 @@ fi
 
 # ────────────────────────────────────────────────────────────────────────────────
 section "OUTPUT: FINAL REPORT"
-echo "The agent saves its full output to output/output_module8_platform_agent.json."
+echo "The agent saves its full output to output/platform_agent_module8.json."
 echo ""
 
-cmd "cat output/output_module8_platform_agent.json 2>/dev/null | python3 -m json.tool | head -50"
-cat output/output_module8_platform_agent.json 2>/dev/null | python3 -m json.tool | head -50 || note "Run live to generate output"
+cmd "cat output/platform_agent_module8.json 2>/dev/null | python3 -m json.tool | head -50"
+cat output/platform_agent_module8.json 2>/dev/null | python3 -m json.tool | head -50 || note "Run live to generate output"
 echo ""
 
 note "Key fields:"

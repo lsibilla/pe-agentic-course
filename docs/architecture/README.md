@@ -111,7 +111,7 @@ flowchart TD
         A([sample_data.json\npipeline results]) --> B[triage_agent.py]
         QG --> B
         B --> C[(Claude API)]
-        C --> D["APPROVE\nAPPROVE_WITH_CONDITIONS\nHOLD"]
+        C --> D["APPROVE\nAPPROVE_WITH_CONDITIONS\nREJECT"]
     end
 
     subgraph post [Post-Deploy Monitor]
@@ -124,7 +124,7 @@ flowchart TD
     D --> I{decision?}
     I -- APPROVE --> J([Deploy proceeds])
     I -- APPROVE_WITH_CONDITIONS --> K([Deploy + conditions log])
-    I -- HOLD --> L([Deploy blocked])
+    I -- REJECT --> L([Deploy blocked])
 
     H --> M{rollback_recommended?}
     M -- "true, IMMEDIATE" --> N([Page on-call now])
@@ -190,7 +190,7 @@ flowchart TD
 
     ORCH --> GATE & ROLL
 
-    CG --> GR["Gate result\n{ decision: APPROVE|\n  APPROVE_WITH_CONDITIONS|HOLD\n  risk_score, escalate }"]
+    CG --> GR["Gate result\n{ decision: APPROVE|\n  APPROVE_WITH_CONDITIONS|REJECT\n  risk_score, escalate }"]
     CR --> RR["Rollback result\n{ rollback_recommended\n  severity: IMMEDIATE|\n  SCHEDULED|OPTIONAL|NONE\n  trigger }"]
 
     GR & RR --> DC[detect_conflict]
@@ -255,7 +255,7 @@ flowchart TD
         C5 --> R5["{ post_mortem_summary\n  recommendations[] }"]
     end
 
-    R5 --> OUT([output/output_module8_platform_agent.json])
+    R5 --> OUT([output/platform_agent_module8.json])
 
     style step1 fill:#E8F4FD,stroke:#2E74B5
     style step2 fill:#EEF0FF,stroke:#5555CC

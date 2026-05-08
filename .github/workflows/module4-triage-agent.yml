@@ -7,6 +7,9 @@ on:
       - 'shared/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   run-agent:
     runs-on: ubuntu-latest
@@ -17,6 +20,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
         run: pip install anthropic
@@ -24,6 +28,7 @@ jobs:
       - name: Run Module 4 agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MOCK_MODE: ${{ secrets.ANTHROPIC_API_KEY == '' && '1' || '0' }}
         run: python module4/triage_agent.py
 
       - name: Upload output artifact
