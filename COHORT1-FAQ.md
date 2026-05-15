@@ -13,7 +13,7 @@
 
 The API key is not required to complete any exercise — every script in the course supports `--mock` mode, which simulates a real API response locally without making any API call or incurring any cost. You can work through the full course this way.
 
-That said, the total API usage across all 8 modules is approximately **$0.50 for the entire course**. That's the real-world cost of running the exercises against the live Claude API. We'd encourage you to invest that — getting responses from the actual model rather than a simulation is where the real learning happens. You'll see how confidence levels shift with different prompts, how the model handles edge cases in your logs, and how structured JSON output behaves under real conditions. Mock mode is there so nobody is blocked, but live mode is where the course comes to life.
+That said, the total API usage across all 8 modules is small — a few dollars at most, depending on how many times you run each exercise. We'd encourage you to invest that — getting responses from the actual model rather than a simulation is where the real learning happens. You'll see how confidence levels shift with different prompts, how the model handles edge cases in your logs, and how structured JSON output behaves under real conditions. Mock mode is there so nobody is blocked, but live mode is where the course comes to life.
 
 To get an API key:
 1. Go to [console.anthropic.com](https://console.anthropic.com)
