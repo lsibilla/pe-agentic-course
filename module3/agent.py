@@ -80,9 +80,6 @@ def run_agent() -> dict:
             print(f"\n[Iteration {len(history)}]")
             print(json.dumps(result, indent=2))
 
-        return result
-
-
     print(json.dumps(result, indent=2))
     save_json(result, module=3)
     print(to_step_summary(result, title="Module 3 Agent Result"))
