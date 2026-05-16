@@ -66,25 +66,22 @@ def run_agent() -> dict:
         print("[MOCK MODE] In real mode this runs up to 5 ReAct iterations.\n")
         result = MOCK_RESPONSE
     else:
-        # TODO: Implement the ReAct loop.
-        #
-        # The loop should:
-        # 1. Initialise  history = []  and  result = {}
-        # 2. Loop up to AGENT_CONFIG["max_iterations"] times:
-        #    a. Build user_msg:
-        #       - First iteration: f"Context:\n{context}"
-        #       - Later iterations: append  f"\n\nPrevious iterations:\n{json.dumps(history, indent=2)}"
-        #    b. Call ask() with SYSTEM_PROMPT, user_msg,
-        #       AGENT_CONFIG["model"], and AGENT_CONFIG["max_tokens"]
-        #    c. Print  f"\n[Iteration {i + 1}]"  and  json.dumps(result, indent=2)
-        #    d. Append result to history
-        #    e. If result.get("finished") is True, break the loop
-        # 3. After the loop, assign the final result and let the code below print/save it.
-        #
-        # Tip: run --mock first to see the expected output shape, then implement.
-        raise NotImplementedError(
-            "Implement run_agent() — build the ReAct loop. See the TODO comment above."
-        )
+        history = []
+        result = {}
+
+        while (not result.get("finished") and len(history) < AGENT_CONFIG["max_iterations"]):
+            user_msg = f"Context:\n{context}"
+            if (len(history) > 0):
+                user_msg += f"\n\nPrevious iterations:\n{json.dumps(history, indent=2)}"
+
+            result = ask(SYSTEM_PROMPT, user_msg, AGENT_CONFIG["model"], AGENT_CONFIG["max_tokens"])
+
+            history.append(result)
+            print(f"\n[Iteration {len(history)}]")
+            print(json.dumps(result, indent=2))
+
+        return result
+
 
     print(json.dumps(result, indent=2))
     save_json(result, module=3)

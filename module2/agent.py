@@ -71,7 +71,7 @@ def run_agent() -> dict:
         result = MOCK_RESPONSE
     else:
         result = ask(system=SYSTEM_PROMPT,
-                     user=f"Context:\n{load_sample()}",
+                     user=f"Context:\n{context}",
                      model=AGENT_CONFIG["model"],
                      max_tokens=AGENT_CONFIG["max_tokens"])
 
