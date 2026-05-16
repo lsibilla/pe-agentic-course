@@ -39,6 +39,7 @@ MOCK_RESPONSE = {
 # ── Prompt & config ────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = (
     "You are a deployment triage agent. The service is returning 503 errors with no exceptions in the logs — a silent failure. Analyse the context and return ONLY valid JSON with keys: diagnosis (string), confidence (HIGH|MEDIUM|LOW), root_cause_hypothesis (string), proposed_fix (string), recommended_action (ROLLBACK|ESCALATE|INVESTIGATE), escalate (boolean)."
+    "confidence is HIGH only when root cause is confirmed in logs; MEDIUM when inferring state."
 )
 
 AGENT_CONFIG = {
@@ -67,21 +68,7 @@ def run_agent() -> dict:
         print("[MOCK MODE] Note: MEDIUM confidence + escalate=true is the correct answer for silent 503s.\n")
         result = MOCK_RESPONSE
     else:
-        # TODO: Call ask() with SYSTEM_PROMPT and the deployment context.
-        #
-        # ask() signature:
-        #   ask(system=..., user=..., model=..., max_tokens=...)
-        #
-        # - system:     use SYSTEM_PROMPT (the silent 503 agent prompt above)
-        # - user:       pass the context as  f"Context:\n{context}"
-        # - model and max_tokens: use AGENT_CONFIG["model"] and AGENT_CONFIG["max_tokens"]
-        #
-        # Key teaching point: the correct answer here is MEDIUM confidence + escalate=true.
-        # A silent 503 with no exceptions means you are inferring state, not reading a traceback.
-        # Assign the return value to  result  so it flows into the print/save below.
-        raise NotImplementedError(
-            "Complete run_agent() — call ask() with SYSTEM_PROMPT and the context."
-        )
+        result = ask(SYSTEM_PROMPT, f"Context:\n{context}", AGENT_CONFIG["model"], AGENT_CONFIG["max_tokens"])
 
     print(json.dumps(result, indent=2))
     save_json(result, module=4)
